@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Customer Behavior Analytics & Segmentation</title>
+<style>
+    :root{
+        --bg:#070b16;
+        --bg2:#0d1324;
+        --card:rgba(255,255,255,.08);
+        --card2:rgba(255,255,255,.05);
+        --line:rgba(255,255,255,.12);
+        --text:#f8fafc;
+        --muted:#cbd5e1;
+        --primary:#4f8cff;
+        --primary2:#7c5cff;
+        --success:#10b981;
+        --warning:#f59e0b;
+        --danger:#ef4444;
+        --shadow:0 20px 60px rgba(0,0,0,.35);
+    }
+
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+    body{
+        font-family: Inter, Segoe UI, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        color:var(--text);
+        background:
+            radial-gradient(circle at top left, rgba(79,140,255,.22), transparent 25%),
+            radial-gradient(circle at top right, rgba(124,92,255,.16), transparent 22%),
+            linear-gradient(135deg, var(--bg), var(--bg2));
+        overflow:hidden;
+    }
+
+    .app{
+        display:grid;
+        grid-template-columns: 280px 1fr;
+        height:100vh;
+    }
+
+    .sidebar{
+        padding:28px 18px;
+        background:rgba(255,255,255,.04);
+        border-right:1px solid var(--line);
+        backdrop-filter: blur(18px);
+        overflow:auto;
+    }
+
+    .brand{
+        display:flex;
+        align-items:center;
+        gap:12px;
+        padding:14px 14px 18px;
+        border-bottom:1px solid var(--line);
+        margin-bottom:18px;
+    }
+
+    .brand-mark{
+        width:42px;height:42px;border-radius:14px;
+        display:grid;place-items:center;
+        background:linear-gradient(135deg, var(--primary), var(--primary2));
+        box-shadow:0 10px 20px rgba(79,140,255,.28);
+        font-size:20px;
+    }
+
+    .brand h1{
+        font-size:16px;
+        line-height:1.15;
+        letter-spacing:.2px;
+    }
+
+    .brand p{
+        margin-top:4px;
+        font-size:12px;
+        color:var(--muted);
+    }
+
+    .navlist{
+        list-style:none;
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+    }
+
+    .navitem{
+        cursor:pointer;
+        display:flex;
+        gap:12px;
+        align-items:center;
+        padding:12px 12px;
+        border:1px solid transparent;
+        border-radius:14px;
+        color:var(--muted);
+        background:rgba(255,255,255,.03);
+        transition:.25s ease;
+        user-select:none;
+    }
+
+    .navitem:hover{
+        transform:translateX(4px);
+        border-color:rgba(255,255,255,.12);
+        background:rgba(255,255,255,.06);
+        color:var(--text);
+    }
+
+    .navitem.active{
+        background:linear-gradient(135deg, rgba(79,140,255,.22), rgba(124,92,255,.18));
+        color:var(--text);
+        border-color:rgba(79,140,255,.35);
+        box-shadow:0 12px 34px rgba(0,0,0,.22);
+    }
+
+    .navnum{
+        width:28px;height:28px;border-radius:10px;
+        display:grid;place-items:center;
+        background:rgba(255,255,255,.08);
+        flex:0 0 auto;
+        font-size:12px;
+        font-weight:700;
+    }
+
+    .main{
+        position:relative;
+        overflow:hidden;
+    }
+
+    .topbar{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:18px 28px;
+        border-bottom:1px solid var(--line);
+        background:rgba(7,11,22,.35);
+        backdrop-filter:blur(14px);
+    }
+
+    .topbar .title{
+        font-size:18px;
+        font-weight:700;
+        letter-spacing:.2px;
+    }
+
+    .topbar .subtitle{
+        font-size:13px;
+        color:var(--muted);
+        margin-top:4px;
+    }
+
+    .controls{
+        display:flex;
+        gap:10px;
+        align-items:center;
+    }
+
+    .pill{
+        padding:10px 14px;
+        border-radius:999px;
+        background:rgba(255,255,255,.06);
+        border:1px solid var(--line);
+        color:var(--muted);
+        font-size:13px;
+        white-space:nowrap;
+    }
+
+    .btn{
+        border:none;
+        border-radius:14px;
+        padding:11px 16px;
+        color:white;
+        cursor:pointer;
+        background:linear-gradient(135deg, var(--primary), var(--primary2));
+        box-shadow:0 10px 20px rgba(79,140,255,.22);
+        transition:.2s ease;
+        font-weight:600;
+    }
+    .btn:hover{transform:translateY(-2px)}
+    .btn.secondary{
+        background:rgba(255,255,255,.06);
+        border:1px solid var(--line);
+        box-shadow:none;
+        color:var(--text);
+    }
+
+    .slides-wrap{
+        position:relative;
+        height:calc(100vh - 74px);
+        padding:22px;
+    }
+
+    .slide{
+        position:absolute;
+        inset:22px;
+        opacity:0;
+        transform:translateY(24px) scale(.985);
+        pointer-events:none;
+        transition:opacity .65s ease, transform .65s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .slide.active{
+        opacity:1;
+        transform:translateY(0) scale(1);
+        pointer-events:auto;
+    }
+
+    .panel{
+        height:100%;
+        border-radius:28px;
+        overflow:hidden;
+        border:1px solid rgba(255,255,255,.12);
+        background:
+            radial-gradient(circle at top left, rgba(79,140,255,.15), transparent 35%),
+            radial-gradient(circle at bottom right, rgba(124,92,255,.12), transparent 38%),
+            rgba(255,255,255,.04);
+        box-shadow:var(--shadow);
+        backdrop-filter: blur(18px);
+        display:flex;
+        flex-direction:column;
+    }
+
+    .panel-body{
+        padding:34px;
+        height:100%;
+        overflow:auto;
+    }
+
+    .eyebrow{
+        display:inline-flex;
+        align-items:center;
+        gap:10px;
+        padding:8px 14px;
+        border-radius:999px;
+        border:1px solid rgba(255,255,255,.12);
+        background:rgba(255,255,255,.05);
+        color:var(--muted);
+        font-size:13px;
+        margin-bottom:18px;
+    }
+
+    .hero-title{
+        font-size:clamp(2.7rem, 6vw, 5.4rem);
+        line-height:1.02;
+        letter-spacing:-.03em;
+        max-width:900px;
+    }
+
+    .hero-title .grad{
+        background:linear-gradient(135deg, #fff, #7db1ff 45%, #ab8bff);
+        -webkit-background-clip:text;
+        -webkit-text-fill-color:transparent;
+        background-clip:text;
+    }
+
+    .hero-sub{
+        max-width:860px;
+        margin-top:18px;
+        font-size:1.08rem;
+        color:var(--muted);
+        line-height:1.8;
+    }
+
+    .tag-row{
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+        margin-top:22px;
+    }
+
+    .tag{
+        padding:10px 14px;
+        border-radius:999px;
+        background:rgba(255,255,255,.06);
+        border:1px solid var(--line);
+        color:var(--text);
+        font-size:13px;
+    }
+
+    .grid-4{
+        display:grid;
+        grid-template-columns:repeat(4, 1fr);
+        gap:18px;
+        margin-top:24px;
+    }
+
+    .grid-3{
+        display:grid;
+        grid-template-columns:repeat(3, 1fr);
+        gap:18px;
+        margin-top:24px;
+    }
+
+    .grid-2{
+        display:grid;
+        grid-template-columns:repeat(2, 1fr);
+        gap:18px;
+        margin-top:24px;
+    }
+
+    .card{
+        background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+        border:1px solid rgba(255,255,255,.12);
+        border-radius:22px;
+        padding:22px;
+        min-height:120px;
+        transition:.25s ease;
+        position:relative;
+        overflow:hidden;
+    }
+
+    .card:hover{
+        transform:translateY(-5px);
+        border-color:rgba(255,255,255,.2);
+        box-shadow:0 18px 40px rgba(0,0,0,.24);
+    }
+
+    .metric{
+        font-size:2.2rem;
+        font-weight:800;
+        letter-spacing:-.04em;
+        margin-bottom:8px;
+    }
+
+    .metric.small{font-size:1.65rem}
+    .label{color:var(--muted);font-size:14px;line-height:1.6}
+    .title{
+        font-size:2.2rem;
+        letter-spacing:-.03em;
+        margin-bottom:12px;
+    }
+    .section-sub{
+        font-size:1rem;
+        color:var(--muted);
+        line-height:1.8;
+        max-width:880px;
+    }
+
+    .split{
+        display:grid;
+        grid-template-columns:1.35fr .95fr;
+        gap:18px;
+        margin-top:22px;
+    }
+
+    .visual{
+        min-height:420px;
+        border-radius:22px;
+        border:1px solid rgba(255,255,255,.12);
+        background:
+            radial-gradient(circle at center, rgba(79,140,255,.18), transparent 55%),
+            rgba(255,255,255,.04);
+        position:relative;
+        overflow:hidden;
+        padding:24px;
+    }
+
+    .visual .placeholder{
+        position:absolute;
+        inset:18px;
+        border-radius:18px;
+        border:1px dashed rgba(255,255,255,.22);
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        color:#dbeafe;
+        background:rgba(255,255,255,.02);
+        text-align:center;
+        padding:20px;
+        font-size:1rem;
+        line-height:1.8;
+    }
+
+    .chart-card {
+    background: rgba(255,255,255,0.05);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    }
+
+    .chart-card h3 {
+        margin: 0 0 15px;
+        color: #dbeafe;
+        font-size: 1.4rem;
+    }
+
+    .chart-image {
+        width: 100%;
+        max-width: 900px;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .timeline{
+        display:flex;
+        gap:10px;
+        align-items:center;
+        flex-wrap:wrap;
+        margin-top:24px;
+    }
+
+    .step{
+        flex:1;
+        min-width:150px;
+        background:rgba(255,255,255,.05);
+        border:1px solid var(--line);
+        border-radius:18px;
+        padding:16px 14px;
+        text-align:center;
+    }
+
+    .step .circle{
+        width:44px;height:44px;border-radius:16px;
+        display:grid;place-items:center;
+        margin:0 auto 12px;
+        background:linear-gradient(135deg, var(--primary), var(--primary2));
+        font-weight:800;
+    }
+
+    .arrow{
+        color:rgba(255,255,255,.4);
+        font-size:24px;
+        padding:0 6px;
+    }
+
+    .bullets{
+        margin-top:18px;
+        display:grid;
+        gap:12px;
+    }
+
+    .bullet{
+        display:flex;
+        gap:12px;
+        align-items:flex-start;
+        background:rgba(255,255,255,.04);
+        border:1px solid rgba(255,255,255,.09);
+        border-radius:18px;
+        padding:16px 16px;
+        color:var(--text);
+    }
+
+    .dot{
+        width:11px;height:11px;border-radius:50%;
+        margin-top:6px;
+        flex:0 0 auto;
+        background:var(--primary);
+        box-shadow:0 0 0 6px rgba(79,140,255,.14);
+    }
+
+    .dot.green{background:var(--success); box-shadow:0 0 0 6px rgba(16,185,129,.14)}
+    .dot.amber{background:var(--warning); box-shadow:0 0 0 6px rgba(245,158,11,.14)}
+    .dot.red{background:var(--danger); box-shadow:0 0 0 6px rgba(239,68,68,.14)}
+
+    .gallery{
+        display:grid;
+        grid-template-columns:repeat(2,1fr);
+        gap:18px;
+        margin-top:22px;
+    }
+
+    .shot{
+        min-height:190px;
+        border-radius:22px;
+        border:1px solid rgba(255,255,255,.12);
+        background:
+            linear-gradient(135deg, rgba(79,140,255,.18), rgba(124,92,255,.12)),
+            rgba(255,255,255,.04);
+        padding:18px;
+        position:relative;
+        overflow:hidden;
+        transition:.25s ease;
+    }
+
+    .shot:hover{
+        transform:translateY(-7px) scale(1.01);
+        box-shadow:0 20px 50px rgba(0,0,0,.28);
+    }
+
+    .shot .shot-title{
+        font-size:1.05rem;
+        font-weight:700;
+        margin-bottom:10px;
+    }
+
+    .shot .shot-desc{
+        color:var(--muted);
+        font-size:.95rem;
+        line-height:1.7;
+        max-width:85%;
+    }
+
+    .shot::after{
+        content:"";
+        position:absolute;
+        right:-40px;bottom:-40px;
+        width:160px;height:160px;border-radius:50%;
+        background:radial-gradient(circle, rgba(255,255,255,.18), transparent 65%);
+    }
+
+    .ribbons{
+        display:flex;
+        gap:12px;
+        flex-wrap:wrap;
+        margin-top:20px;
+    }
+
+    .ribbon{
+        padding:10px 14px;
+        border-radius:14px;
+        background:rgba(255,255,255,.05);
+        border:1px solid rgba(255,255,255,.12);
+        color:var(--text);
+    }
+
+    .footer{
+        position:absolute;
+        right:22px;
+        bottom:18px;
+        color:rgba(255,255,255,.45);
+        font-size:13px;
+        z-index:5;
+    }
+
+    .slide-counter{
+        color:var(--muted);
+        font-size:14px;
+        padding:10px 14px;
+        border:1px solid var(--line);
+        border-radius:999px;
+        background:rgba(255,255,255,.04);
+    }
+
+    .progress{
+        position:fixed;
+        top:0;left:280px;
+        height:4px;
+        width:0%;
+        background:linear-gradient(90deg, var(--primary), var(--primary2));
+        box-shadow:0 0 18px rgba(79,140,255,.55);
+        z-index:50;
+    }
+
+    .kbd{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:30px;
+        padding:4px 8px;
+        border-radius:8px;
+        border:1px solid rgba(255,255,255,.18);
+        background:rgba(255,255,255,.06);
+        color:var(--text);
+        font-size:12px;
+        margin:0 2px;
+    }
+
+    .nav-actions{
+        display:flex;
+        gap:10px;
+        align-items:center;
+    }
+
+    .counter-animate{
+        font-variant-numeric: tabular-nums;
+    }
+
+    .recommend-card{
+        display:flex;
+        gap:14px;
+        align-items:flex-start;
+    }
+
+    .recommend-icon{
+        width:44px;height:44px;border-radius:14px;
+        display:grid;place-items:center;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.12);
+        font-size:20px;
+        flex:0 0 auto;
+    }
+
+    .mini-note{
+        color:var(--muted);
+        font-size:13px;
+        margin-top:8px;
+        line-height:1.6;
+    }
+
+    .reveal{animation:rise .7s ease both}
+    .delay-1{animation-delay:.08s}
+    .delay-2{animation-delay:.16s}
+    .delay-3{animation-delay:.24s}
+    .delay-4{animation-delay:.32s}
+
+    @keyframes rise{
+        from{opacity:0;transform:translateY(18px)}
+        to{opacity:1;transform:translateY(0)}
+    }
+
+    @media (max-width: 1180px){
+        .app{grid-template-columns:1fr}
+        .sidebar{display:none}
+        .progress{left:0}
+        .slides-wrap{padding:16px}
+        .slide{inset:16px}
+    }
+    @media (max-width: 900px){
+        .grid-4,.grid-3,.grid-2,.split,.gallery{grid-template-columns:1fr}
+        .hero-title{font-size:clamp(2.3rem, 8vw, 4rem)}
+        .topbar{flex-direction:column;gap:14px;align-items:flex-start}
+        .controls{flex-wrap:wrap}
+        .panel-body{padding:24px}
+        .slide{inset:12px}
+    }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+
+<div class="app">
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-mark">📊</div>
+            <div>
+                <h1>Customer Behavior<br>Analytics & Segmentation</h1>
+                <p>Internship presentation</p>
+            </div>
+        </div>
+
+        <ul class="navlist" id="navlist">
+            <li class="navitem active" data-slide="1"><span class="navnum">1</span> Cover</li>
+            <li class="navitem" data-slide="2"><span class="navnum">2</span> Executive Summary</li>
+            <li class="navitem" data-slide="3"><span class="navnum">3</span> Business Problem</li>
+            <li class="navitem" data-slide="4"><span class="navnum">4</span> Dataset Overview</li>
+            <li class="navitem" data-slide="5"><span class="navnum">5</span> Data Cleaning</li>
+            <li class="navitem" data-slide="6"><span class="navnum">6</span> EDA</li>
+            <li class="navitem" data-slide="7"><span class="navnum">7</span> RFM Analysis</li>
+            <li class="navitem" data-slide="8"><span class="navnum">8</span> Segmentation</li>
+            <li class="navitem" data-slide="9"><span class="navnum">9</span> K-Means</li>
+            <li class="navitem" data-slide="10"><span class="navnum">10</span> Dashboard Gallery</li>
+            <li class="navitem" data-slide="11"><span class="navnum">11</span> Dashboard Insights</li>
+            <li class="navitem" data-slide="12"><span class="navnum">12</span> Key Findings</li>
+            <li class="navitem" data-slide="13"><span class="navnum">13</span> Recommendations</li>
+            <li class="navitem" data-slide="14"><span class="navnum">14</span> Skills Demonstrated</li>
+            <li class="navitem" data-slide="15"><span class="navnum">15</span> Future Roadmap</li>
+            <li class="navitem" data-slide="16"><span class="navnum">16</span> Thank You</li>
+        </ul>
+    </aside>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <div class="title" id="top-title">Customer Behavior Analytics & Segmentation</div>
+                <div class="subtitle">Use <span class="kbd">←</span><span class="kbd">→</span> to navigate · <span class="kbd">F</span> fullscreen</div>
+            </div>
+            <div class="controls">
+                <div class="slide-counter">Slide <span id="slide-num">1</span> / 16</div>
+                <div class="nav-actions">
+                    <button class="btn secondary" id="prevBtn">Prev</button>
+                    <button class="btn secondary" id="nextBtn">Next</button>
+                    <button class="btn" id="fsBtn">Fullscreen</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="slides-wrap">
+
+            <!-- 1 -->
+            <section class="slide active">
+                <div class="panel">
+                    <div class="panel-body hero">
+                        <div class="eyebrow reveal">Internship · Retail Analytics</div>
+                        <h1 class="hero-title reveal delay-1">
+                            Customer Behavior <span class="grad">Analytics & Segmentation</span>
+                        </h1>
+                        <p class="hero-sub reveal delay-2">
+                            Transforming 525K retail transactions into customer intelligence using Python, RFM analysis,
+                            K-Means clustering, and a premium Power BI dashboard.
+                        </p>
+                        <div class="tag-row reveal delay-3">
+                            <span class="tag">Python</span>
+                            <span class="tag">Pandas</span>
+                            <span class="tag">Machine Learning</span>
+                            <span class="tag">Power BI</span>
+                            <span class="tag">Business Storytelling</span>
+                        </div>
+                        <div class="grid-4">
+                            <div class="card reveal delay-1">
+                                <div class="metric counter-animate" data-target="8800000">0</div>
+                                <div class="label">Revenue Generated</div>
+                            </div>
+                            <div class="card reveal delay-2">
+                                <div class="metric counter-animate" data-target="19000">0</div>
+                                <div class="label">Orders Analyzed</div>
+                            </div>
+                            <div class="card reveal delay-3">
+                                <div class="metric counter-animate" data-target="4312">0</div>
+                                <div class="label">Unique Customers</div>
+                            </div>
+                            <div class="card reveal delay-4">
+                                <div class="metric counter-animate" data-target="38">0</div>
+                                <div class="label">Countries Covered</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">1 / 16</div>
+            </section>
+
+            <!-- 2 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Executive Summary</div>
+                        <h2 class="title">Project Outcome at a Glance</h2>
+                        <p class="section-sub">
+                            This project identifies high-value customers, measures buying behavior, segments customers into
+                            meaningful groups, and translates analytics into business actions for retention and growth.
+                        </p>
+                        <div class="grid-4">
+                            <div class="card"><div class="metric counter-animate" data-target="8800000">0</div><div class="label">Total Revenue</div></div>
+                            <div class="card"><div class="metric counter-animate" data-target="457">0</div><div class="label">Avg Order Value</div></div>
+                            <div class="card"><div class="metric counter-animate" data-target="73319">0</div><div class="label">Peak Monthly Revenue</div></div>
+                            <div class="card"><div class="metric counter-animate" data-target="4">0</div><div class="label">Main Customer Segments</div></div>
+                        </div>
+                        <div class="bullets">
+                            <div class="bullet"><span class="dot green"></span><div><b>Best Month:</b> November generated the highest revenue, driven by seasonal demand and stronger order volume.</div></div>
+                            <div class="bullet"><span class="dot"></span><div><b>Top Market:</b> The United Kingdom contributed the majority of sales and remained the strongest region.</div></div>
+                            <div class="bullet"><span class="dot amber"></span><div><b>Largest Segment:</b> At-Risk customers formed the largest group, creating a clear retention opportunity.</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">2 / 16</div>
+            </section>
+
+            <!-- 3 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Business Problem</div>
+                        <h2 class="title">What business question are we solving?</h2>
+                        <p class="section-sub">
+                            Retail companies often know their sales numbers, but not which customers deserve attention,
+                            who may churn, or where growth opportunities exist.
+                        </p>
+                        <div class="grid-2">
+                            <div class="card">
+                                <div class="metric small">01</div>
+                                <div class="label"><b>Identify valuable customers</b><br>Find customers who contribute the most revenue and buy frequently.</div>
+                            </div>
+                            <div class="card">
+                                <div class="metric small">02</div>
+                                <div class="label"><b>Reduce churn risk</b><br>Detect customers who are becoming inactive and need re-engagement.</div>
+                            </div>
+                            <div class="card">
+                                <div class="metric small">03</div>
+                                <div class="label"><b>Understand purchasing behavior</b><br>Analyze frequency, spend patterns, seasonality, and product preference.</div>
+                            </div>
+                            <div class="card">
+                                <div class="metric small">04</div>
+                                <div class="label"><b>Guide targeted marketing</b><br>Use segments to plan loyalty, upsell, and win-back campaigns.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">3 / 16</div>
+            </section>
+
+            <!-- 4 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Dataset Overview</div>
+                        <h2 class="title">Online Retail Transaction Dataset</h2>
+                        <p class="section-sub">A large transactional dataset that supports sales analytics, customer behavior analysis, and segmentation.</p>
+                        <div class="grid-4">
+                            <div class="card"><div class="metric small counter-animate" data-target="525461">0</div><div class="label">Original Rows</div></div>
+                            <div class="card"><div class="metric small counter-animate" data-target="400916">0</div><div class="label">Cleaned Rows</div></div>
+                            <div class="card"><div class="metric small counter-animate" data-target="4312">0</div><div class="label">Customers</div></div>
+                            <div class="card"><div class="metric small counter-animate" data-target="365">0</div><div class="label">Days Covered</div></div>
+                        </div>
+                        <div class="timeline">
+                            <div class="step"><div class="circle">1</div><b>Invoice</b><div class="mini-note">Order tracking</div></div>
+                            <div class="arrow">→</div>
+                            <div class="step"><div class="circle">2</div><b>Customer ID</b><div class="mini-note">Customer identity</div></div>
+                            <div class="arrow">→</div>
+                            <div class="step"><div class="circle">3</div><b>Quantity</b><div class="mini-note">Units purchased</div></div>
+                            <div class="arrow">→</div>
+                            <div class="step"><div class="circle">4</div><b>Revenue</b><div class="mini-note">Business value</div></div>
+                            <div class="arrow">→</div>
+                            <div class="step"><div class="circle">5</div><b>Country</b><div class="mini-note">Geographic analysis</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">4 / 16</div>
+            </section>
+
+            <!-- 5 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Data Cleaning</div>
+                        <h2 class="title">Raw data was transformed into analysis-ready data</h2>
+                        <p class="section-sub">The cleaning phase removed noise and made the dataset usable for accurate analytics and clustering.</p>
+                        <div class="split">
+                            <div class="card">
+                                <div class="metric">525K → 400K</div>
+                                <div class="label">A clean, reliable dataset was created after removing invalid rows and redundant records.</div>
+                                <div class="bullets">
+                                    <div class="bullet"><span class="dot red"></span><div>Removed missing Customer IDs and product descriptions</div></div>
+                                    <div class="bullet"><span class="dot red"></span><div>Removed duplicates and canceled / negative quantity transactions</div></div>
+                                    <div class="bullet"><span class="dot red"></span><div>Filtered negative prices and standardized date fields</div></div>
+                                    <div class="bullet"><span class="dot green"></span><div>Created Revenue = Quantity × Price for all valid transactions</div></div>
+                                </div>
+                            </div>
+                            <div class="visual">
+                                        <h3 style="margin-bottom:10px">Cleaning Pipeline</h3>
+                                        <div class="ribbons">
+                                            <span class="ribbon">Null handling</span>
+                                            <span class="ribbon">Duplicate removal</span>
+                                            <span class="ribbon">Negative filtering</span>
+                                            <span class="ribbon">Feature engineering</span>
+                                        </div>
+                                        <div style="margin-top: 10px;">
+                                            <img src="../dashboard/Cleaning.png"
+                                                alt="Top countries by revenue chart"
+                                                class="chart-image">
+                                        </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">5 / 16</div>
+            </section>
+
+            <!-- 6 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Exploratory Data Analysis</div>
+                        <h2 class="title">Patterns in revenue, demand, and geography</h2>
+                        <p class="section-sub">EDA helped reveal when sales peaked, which markets contributed most, and how revenue behaved across the year.</p>
+                        <div class="split">
+                            <div class="visual">
+                                <div class="chart-card">
+                                    <h3>Revenue Trend</h3>
+                                    <img src="../dashboard/MarketTrend.png"
+                                        alt="Monthly revenue trend chart"
+                                        class="chart-image">
+                                </div>
+
+                                <div class="chart-card">
+                                    <h3>Country Performance</h3>
+                                    <img src="../dashboard/CountryRevenue.png"
+                                        alt="Top countries by revenue chart"
+                                        class="chart-image">
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="metric small">Key Findings</div>
+                                <div class="bullets">
+                                    <div class="bullet"><span class="dot green"></span><div><b>November</b> recorded the highest revenue.</div></div>
+                                    <div class="bullet"><span class="dot"></span><div><b>United Kingdom</b> dominated overall sales.</div></div>
+                                    <div class="bullet"><span class="dot amber"></span><div><b>Q4</b> showed the strongest seasonal performance.</div></div>
+                                    <div class="bullet"><span class="dot"></span><div>Revenue was concentrated in a relatively small customer base.</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">6 / 16</div>
+            </section>
+
+            <!-- 7 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">RFM Analysis</div>
+                        <h2 class="title">Recency · Frequency · Monetary</h2>
+                        <p class="section-sub">RFM scoring turns raw transactions into customer value groups by measuring how recently, how often, and how much customers buy.</p>
+                        <div class="grid-3">
+                            <div class="card">
+                                <div class="metric small">R</div>
+                                <div class="label"><b>Recency</b><br>How recently a customer purchased.</div>
+                            </div>
+                            <div class="card">
+                                <div class="metric small">F</div>
+                                <div class="label"><b>Frequency</b><br>How often a customer purchases.</div>
+                            </div>
+                            <div class="card">
+                                <div class="metric small">M</div>
+                                <div class="label"><b>Monetary</b><br>How much revenue a customer contributes.</div>
+                            </div>
+                        </div>
+                        <div class="card" style="margin-top:18px">
+                            <div class="metric small">RFM Score</div>
+                            <div class="label">Customers were ranked and scored to identify Champions, Loyal Customers, Regular Customers, and At-Risk Customers.</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">7 / 16</div>
+            </section>
+
+            <!-- 8 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Customer Segmentation</div>
+                        <h2 class="title">From RFM scores to business segments</h2>
+                        <p class="section-sub">Each segment needs a different marketing strategy, retention approach, and customer experience plan.</p>
+                        <div class="grid-4">
+                            <div class="card"><div class="metric small">🏆</div><div class="label"><b>Champions</b><br>Highest value customers</div></div>
+                            <div class="card"><div class="metric small">⭐</div><div class="label"><b>Loyal</b><br>Frequent repeat buyers</div></div>
+                            <div class="card"><div class="metric small">📘</div><div class="label"><b>Regular</b><br>Stable but moderate customers</div></div>
+                            <div class="card"><div class="metric small">⚠</div><div class="label"><b>At Risk</b><br>Inactive or declining customers</div></div>
+                        </div>
+                        <div class="split">
+                            <div class="visual">
+                                    <div>
+                                        <h3>Segment Distribution Chart</h3>
+                                        <img src="../dashboard/CustomerSegmentation.png" alt="Customer Segment Distribution."  class="chart-image">
+                                    </div>
+                            </div>
+                            <div class="card">
+                                <div class="metric small">Action Logic</div>
+                                <div class="bullets">
+                                    <div class="bullet"><span class="dot green"></span><div><b>Champions:</b> reward and retain.</div></div>
+                                    <div class="bullet"><span class="dot"></span><div><b>Loyal:</b> upsell and cross-sell.</div></div>
+                                    <div class="bullet"><span class="dot"></span><div><b>Regular:</b> nurture into higher frequency.</div></div>
+                                    <div class="bullet"><span class="dot red"></span><div><b>At Risk:</b> run win-back campaigns.</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">8 / 16</div>
+            </section>
+
+            <!-- 9 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Machine Learning</div>
+                        <h2 class="title">K-Means clustering revealed behavior groups</h2>
+                        <p class="section-sub">Clustering adds a machine learning layer by grouping similar customer profiles based on RFM behavior.</p>
+                        <div class="grid-3">
+                            <div class="card"><div class="metric small">1</div><div class="label"><b>Prepare RFM features</b><br>Standardize Recency, Frequency, and Monetary variables.</div></div>
+                            <div class="card"><div class="metric small">2</div><div class="label"><b>Choose cluster count</b><br>Use elbow method to identify the ideal number of groups.</div></div>
+                            <div class="card"><div class="metric small">3</div><div class="label"><b>Fit K-Means</b><br>Assign customers into behavior-based clusters.</div></div>
+                        </div>
+                        <div class="split">
+                            <div class="visual">
+                                <div>
+                                    <h3>Cluster Analysis</h3>
+                                    <img src="../dashboard/ClusterAnalysis.png" alt="Cluster Analysis" class="chart-image">
+                                </div>
+                            </div>
+                            <div class="card">
+                                <div class="metric small">Business Interpretation</div>
+                                <div class="label">Clustering highlights high-value clusters, dormant customers, and growth segments that can be targeted differently.</div>
+                                <div class="bullets" style="margin-top:14px">
+                                    <div class="bullet"><span class="dot green"></span><div>High frequency + high monetary = premium customers</div></div>
+                                    <div class="bullet"><span class="dot amber"></span><div>Medium engagement = growth opportunity</div></div>
+                                    <div class="bullet"><span class="dot red"></span><div>Low recency = reactivation needed</div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">9 / 16</div>
+            </section>
+
+            <!-- 10 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Power BI Dashboard</div>
+                        <h2 class="title">Interactive dashboard gallery</h2>
+                        <div class="gallery">
+                            <div class="shot">
+                                <div class="shot-title">Executive Overview</div>
+                                <img src="../dashboard/Page1.png" alt="High-level KPIs, revenue trend, top countries, and top products." class="chart-image">
+                            </div>
+                            <div class="shot">
+                                <div class="shot-title">Sales Analysis</div>
+                                <img src="../dashboard/Page2.png" alt="Monthly revenue, orders trend, heatmaps, and seasonality." class="chart-image">
+                            </div>
+                            <div class="shot">
+                                <div class="shot-title">Customer Analytics</div>
+                                <img src="../dashboard/Page3.png" alt="Top customers, frequency, customer value, and behavioral distribution." class="chart-image">
+                            </div>
+                            <div class="shot">
+                                <div class="shot-title">Segmentation & Clustering</div>
+                                <img src="../dashboard/Page4.png" alt="RFM segments, cluster analysis, and customer action strategy." class="chart-image">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">10 / 16</div>
+            </section>
+
+            <!-- 11 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Dashboard Insights</div>
+                        <h2 class="title">What the dashboard reveals</h2>
+                        <p class="section-sub">These insights connect the visuals to business decisions, making the presentation recruiter-friendly and executive-ready.</p>
+                        <div class="grid-2">
+                            <div class="card"><div class="metric small">Revenue</div><div class="label">Total sales exceeded 8.8M, showing strong business scale.</div></div>
+                            <div class="card"><div class="metric small">November</div><div class="label">The peak month likely reflects seasonal demand and holiday buying.</div></div>
+                            <div class="card"><div class="metric small">United Kingdom</div><div class="label">The primary market contributed the majority of revenue.</div></div>
+                            <div class="card"><div class="metric small">At Risk</div><div class="label">The largest segment signals a clear retention opportunity.</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">11 / 16</div>
+            </section>
+
+            <!-- 12 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Key Business Findings</div>
+                        <h2 class="title">Core insights to remember</h2>
+                        <p class="section-sub">These are the findings that matter most for business decision-making and interviews.</p>
+                        <div class="grid-4">
+                            <div class="card"><div class="metric counter-animate" data-target="8800000">0</div><div class="label">Revenue exceeded 8.8M</div></div>
+                            <div class="card"><div class="metric small">Nov</div><div class="label">Best month for revenue</div></div>
+                            <div class="card"><div class="metric small">UK</div><div class="label">Top market by sales</div></div>
+                            <div class="card"><div class="metric small">At Risk</div><div class="label">Largest customer segment</div></div>
+                        </div>
+                        <div class="bullets">
+                            <div class="bullet"><span class="dot green"></span><div>Revenue is heavily concentrated in a small number of customers.</div></div>
+                            <div class="bullet"><span class="dot amber"></span><div>Seasonality matters: Q4 is the strongest demand period.</div></div>
+                            <div class="bullet"><span class="dot"></span><div>Customer segmentation creates direct marketing and retention value.</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">12 / 16</div>
+            </section>
+
+            <!-- 13 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Recommendations</div>
+                        <h2 class="title">Business actions by customer type</h2>
+                        <p class="section-sub">The project ends with practical actions that a business team can execute immediately.</p>
+                        <div class="grid-2">
+                            <div class="card recommend-card">
+                                <div class="recommend-icon">🏆</div>
+                                <div><b>Reward Champions</b><div class="mini-note">Offer VIP benefits, early access, and loyalty recognition.</div></div>
+                            </div>
+                            <div class="card recommend-card">
+                                <div class="recommend-icon">⚠</div>
+                                <div><b>Reactivate At-Risk Customers</b><div class="mini-note">Use win-back campaigns, reminders, and targeted incentives.</div></div>
+                            </div>
+                            <div class="card recommend-card">
+                                <div class="recommend-icon">⭐</div>
+                                <div><b>Upsell Loyal Customers</b><div class="mini-note">Cross-sell related products and increase basket value.</div></div>
+                            </div>
+                            <div class="card recommend-card">
+                                <div class="recommend-icon">📈</div>
+                                <div><b>Expand High-Performing Markets</b><div class="mini-note">Increase inventory and marketing before peak months.</div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">13 / 16</div>
+            </section>
+
+            <!-- 14 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Skills Demonstrated</div>
+                        <h2 class="title">What this project proves</h2>
+                        <p class="section-sub">This case study demonstrates end-to-end analytics capability across data preparation, modeling, visualization, and storytelling.</p>
+                        <div class="grid-3">
+                            <div class="card"><div class="metric small">01</div><div class="label"><b>Data cleaning</b><br>Pandas, quality control, transformation</div></div>
+                            <div class="card"><div class="metric small">02</div><div class="label"><b>Exploratory analysis</b><br>Trends, distributions, business patterns</div></div>
+                            <div class="card"><div class="metric small">03</div><div class="label"><b>Feature engineering</b><br>Revenue, RFM, date fields, metrics</div></div>
+                            <div class="card"><div class="metric small">04</div><div class="label"><b>Machine learning</b><br>Scaling, clustering, segmentation</div></div>
+                            <div class="card"><div class="metric small">05</div><div class="label"><b>Power BI</b><br>Interactive dashboards and DAX</div></div>
+                            <div class="card"><div class="metric small">06</div><div class="label"><b>Storytelling</b><br>Insights, actions, business value</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">14 / 16</div>
+            </section>
+
+            <!-- 15 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body">
+                        <div class="eyebrow">Future Roadmap</div>
+                        <h2 class="title">Next-level improvements</h2>
+                        <p class="section-sub">These additions would evolve the project into a more advanced analytics and decision-support solution.</p>
+                        <div class="timeline">
+                            <div class="step"><div class="circle">1</div><b>Churn Prediction</b><div class="mini-note">Predict customers likely to leave</div></div>
+                            <div class="arrow">→</div>
+                            <div class="step"><div class="circle">2</div><b>CLV Modeling</b><div class="mini-note">Estimate customer lifetime value</div></div>
+                            <div class="arrow">→</div>
+                            <div class="step"><div class="circle">3</div><b>Recommendation Engine</b><div class="mini-note">Suggest products customers may buy</div></div>
+                            <div class="arrow">→</div>
+                            <div class="step"><div class="circle">4</div><b>Real-time Dashboard</b><div class="mini-note">Live analytics and alerts</div></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">15 / 16</div>
+            </section>
+
+            <!-- 16 -->
+            <section class="slide">
+                <div class="panel">
+                    <div class="panel-body hero">
+                        <div class="eyebrow">Final Slide</div>
+                        <h1 class="hero-title">
+                            <span class="grad">Thank You</span>
+                        </h1>
+                        <p class="hero-sub">
+                            Customer Behavior Analytics & Segmentation is a complete end-to-end portfolio project that
+                            shows cleaning, analysis, segmentation, machine learning, and dashboard storytelling.
+                        </p>
+                        <div class="tag-row">
+                            <span class="tag">Retail Analytics</span>
+                            <span class="tag">Customer Segmentation</span>
+                            <span class="tag">Power BI</span>
+                            <span class="tag">Machine Learning</span>
+                            <span class="tag">Data Storytelling</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer">16 / 16</div>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<script>
+(() => {
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const navitems = Array.from(document.querySelectorAll('.navitem'));
+    const slideNum = document.getElementById('slide-num');
+    const progress = document.getElementById('progress');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const fsBtn = document.getElementById('fsBtn');
+    const topTitle = document.getElementById('top-title');
+
+    const titles = [
+        'Customer Behavior Analytics & Segmentation',
+        'Executive Summary',
+        'Business Problem',
+        'Dataset Overview',
+        'Data Cleaning',
+        'Exploratory Data Analysis',
+        'RFM Analysis',
+        'Customer Segmentation',
+        'Machine Learning Clustering',
+        'Power BI Dashboard Gallery',
+        'Dashboard Insights',
+        'Key Business Findings',
+        'Recommendations',
+        'Skills Demonstrated',
+        'Future Roadmap',
+        'Thank You'
+    ];
+
+    let index = 0;
+    let touchStart = null;
+
+    function animateCounters(root){
+        const counters = root.querySelectorAll('.counter-animate');
+        counters.forEach(el => {
+            const target = Number(el.dataset.target || '0');
+            const duration = 1200;
+            const isInteger = Number.isInteger(target);
+            const start = 0;
+            const startedAt = performance.now();
+
+            function step(now){
+                const p = Math.min((now - startedAt) / duration, 1);
+                const value = start + (target - start) * (1 - Math.pow(1 - p, 3));
+                if (target >= 1000000) {
+                    el.textContent = (value/1000000).toFixed(1) + 'M';
+                } else if (target >= 10000) {
+                    el.textContent = Math.round(value / 1000) + 'K';
+                } else {
+                    el.textContent = isInteger ? Math.round(value).toLocaleString() : value.toFixed(1);
+                }
+                if (p < 1) requestAnimationFrame(step);
+            }
+            requestAnimationFrame(step);
+        });
+    }
+
+    function setActive(i){
+        index = Math.max(0, Math.min(i, slides.length - 1));
+
+        slides.forEach((s, idx) => {
+            s.classList.toggle('active', idx === index);
+            if (idx === index) animateCounters(s);
+        });
+
+        navitems.forEach((n, idx) => n.classList.toggle('active', idx === index));
+
+        slideNum.textContent = index + 1;
+        topTitle.textContent = titles[index];
+        progress.style.width = (((index + 1) / slides.length) * 100) + '%';
+
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = index === slides.length - 1;
+
+        // reset slide scroll
+        const body = slides[index].querySelector('.panel-body');
+        if (body) body.scrollTop = 0;
+
+        // make sure nav item visible
+        const activeNav = navitems[index];
+        if (activeNav) activeNav.scrollIntoView({ block: 'nearest' });
+    }
+
+    function next(){ setActive(index + 1); }
+    function prev(){ setActive(index - 1); }
+
+    navitems.forEach((item, idx) => {
+        item.addEventListener('click', () => setActive(idx));
+    });
+
+    prevBtn.addEventListener('click', prev);
+    nextBtn.addEventListener('click', next);
+
+    fsBtn.addEventListener('click', async () => {
+        try{
+            if (!document.fullscreenElement) {
+                await document.documentElement.requestFullscreen();
+                fsBtn.textContent = 'Exit Fullscreen';
+            } else {
+                await document.exitFullscreen();
+                fsBtn.textContent = 'Fullscreen';
+            }
+        } catch (e) {
+            console.error(e);
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') {
+            e.preventDefault();
+            next();
+        }
+        if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+            e.preventDefault();
+            prev();
+        }
+        if (e.key.toLowerCase() === 'f') {
+            e.preventDefault();
+            fsBtn.click();
+        }
+        if (e.key === 'Home') setActive(0);
+        if (e.key === 'End') setActive(slides.length - 1);
+    });
+
+    // Swipe support
+    document.querySelector('.slides-wrap').addEventListener('touchstart', (e) => {
+        touchStart = e.touches[0].clientX;
+    }, {passive:true});
+    document.querySelector('.slides-wrap').addEventListener('touchend', (e) => {
+        if (touchStart === null) return;
+        const dx = e.changedTouches[0].clientX - touchStart;
+        if (Math.abs(dx) > 45) {
+            if (dx < 0) next(); else prev();
+        }
+        touchStart = null;
+    }, {passive:true});
+
+    // initial
+    setActive(0);
+})();
+</script>
+</body>
+</html>
