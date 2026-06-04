@@ -230,19 +230,19 @@ The dashboard consists of four interactive pages:
 
 ### Executive Overview
 
-![Executive Dashboard](dashboard/page1.png)
+![Executive Dashboard](https://raw.githubusercontent.com/viegz11/customer-behavior-analytics/main/dashboard/Page1.png)
 
 ### Sales Analysis
 
-![Sales Analysis](dashboard/page2.png)
+![Sales Analysis](https://raw.githubusercontent.com/viegz11/customer-behavior-analytics/main/dashboard/Page2.png)
 
 ### Customer Analytics
 
-![Customer Analytics](dashboard/page3.png)
+![Customer Analytics](https://raw.githubusercontent.com/viegz11/customer-behavior-analytics/main/dashboard/Page3.png)
 
 ### Segmentation & Clustering
 
-![Segmentation Dashboard](dashboard/page4.png)
+![Segmentation Dashboard](https://raw.githubusercontent.com/viegz11/customer-behavior-analytics/main/dashboard/Page4.png)
 
 ---
 
