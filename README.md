@@ -285,7 +285,14 @@ The dashboard consists of four interactive pages:
 
 ## 👨‍💻 Author
 
-**Vignesh L**
+<p align="center">
+  <b>Vignesh L</b><br/>
+  Data Analytics & Business Intelligence<br/>
+  Power BI | Python | Data Visualization | Business Insights | Machine Learning
+</p>
 
-Aspiring Data Analyst | Python | SQL | Power BI | Machine Learning
+<p align="center">
+  <a href="https://www.linkedin.com/in/vigneshlc">LinkedIn</a>
+</p>
 
+---
